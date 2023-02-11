@@ -8,11 +8,6 @@ Fecha de inicio: 10/02/2023
 import csv
 import pandas as pd
 
-# Read txt file
-txt_file = r"entrenamiento.txt"
-# Output csv file
-csv_file = r"entrenamiento.csv"
-
 
 def TxtReaderWriter(txt_file, csv_file):
     with open(txt_file, "r") as in_text:
@@ -30,6 +25,9 @@ def TxtReaderWriter(txt_file, csv_file):
                 out_writer.writerow(row)
 
 
+# Call to function
+TxtReaderWriter(r"entrenamiento.txt", r"entrenamiento.csv")
+
 # Read with pandas
 df = pd.read_csv("entrenamiento.csv")
 
@@ -40,5 +38,9 @@ df["message"] = df["message"].str.lower()
 
 # Map data with hamp and spam
 df["spam"] = df["spam"].map({"ham": 1, "spam": 0})
+
+
+# Ham = 1
+# Spam = 0
+print(df["spam"].value_counts())
 # Print data
-print(df)
