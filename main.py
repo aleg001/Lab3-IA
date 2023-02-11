@@ -31,16 +31,22 @@ TxtReaderWriter(r"entrenamiento.txt", r"entrenamiento.csv")
 # Read with pandas
 df = pd.read_csv("entrenamiento.csv")
 
+# Separate into training and test set
+random_data = df.sample(frac=1, random_state=1)
+training_test_index = round(len(df0) * 0.8)
+training_set = random_data[:training_test_index].reset_index(drop=True)
+test_set = random_data[training_test_index:].reset_index(drop=True)
+
 # Normalization of data
-df["message"] = df["message"].str.replace("[^a-zA-Z]", " ")
-df["message"] = df["message"].replace(r"\s+", " ", regex=True)
-df["message"] = df["message"].str.lower()
+training_set["message"] = training_set["message"].str.replace("[^a-zA-Z]", " ")
+training_set["message"] = training_set["message"].replace(r"\s+", " ", regex=True)
+training_set["message"] = training_set["message"].str.lower()
 
 # Map data with hamp and spam
-df["spam"] = df["spam"].map({"ham": 1, "spam": 0})
+training_set["spam"] = training_set["spam"].map({"ham": 1, "spam": 0})
 
 
 # Ham = 1
 # Spam = 0
-print(df["spam"].value_counts())
+print(training_set["spam"].value_counts())
 # Print data
