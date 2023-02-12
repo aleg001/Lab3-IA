@@ -33,20 +33,35 @@ df = pd.read_csv("entrenamiento.csv")
 
 # Separate into training and test set
 random_data = df.sample(frac=1, random_state=1)
-training_test_index = round(len(df0) * 0.8)
+training_test_index = round(len(df) * 0.8)
 training_set = random_data[:training_test_index].reset_index(drop=True)
 test_set = random_data[training_test_index:].reset_index(drop=True)
+
+# Validation Test
+validationTest_index = round(len(test_set) * 0.5)
+validation_test = random_data[:validationTest_index].reset_index(drop=True)
+validation_set = random_data[validationTest_index:].reset_index(drop=True)
+
+
+# Saving data into different files
+
+with open("training_set.csv", "w") as training:
+    training.write(training_set.to_csv(index=False))
+with open("test_set.csv", "w") as test:
+    test.write(test_set.to_csv(index=False))
+with open("validation_test.csv", "w") as validation:
+    validation.write(validation_test.to_csv(index=False))
 
 # Normalization of data
 training_set["message"] = training_set["message"].str.replace("[^a-zA-Z]", " ")
 training_set["message"] = training_set["message"].replace(r"\s+", " ", regex=True)
 training_set["message"] = training_set["message"].str.lower()
 
-# Map data with hamp and spam
+# Map data with ham and spam
 training_set["spam"] = training_set["spam"].map({"ham": 1, "spam": 0})
 
 
 # Ham = 1
 # Spam = 0
-print(training_set["spam"].value_counts())
 # Print data
+print(training_set["spam"].value_counts())
