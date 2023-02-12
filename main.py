@@ -104,6 +104,14 @@ def bayesLaplaceSmoothingModel(training_set):
     psw = dictionaryProbability(diccionarioSpam, paramLaplaceSmoothing, palabras_spam)
     phw = dictionaryProbability(diccionarioHam, paramLaplaceSmoothing, palabras_ham)
 
+    """
+    Pendiente:
+    Recuerde dejar
+    justificada su respuesta en los comentarios de su código.
+    Presente al final del entrenamiento, la métrica de desempeño sobre el subset de training y sobre el subset de
+    testing.
+    """
+
     return probabilidadHam, probabilidadSpam
 
 
