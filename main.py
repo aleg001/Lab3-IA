@@ -38,7 +38,7 @@ training_set = random_data[:training_test_index].reset_index(drop=True)
 test_set = random_data[training_test_index:].reset_index(drop=True)
 
 # Validation Test
-validationTest_index = round(len(test_set) * 0.5)
+validationTest_index = round(len(test_set) * 0.1)
 validation_test = random_data[:validationTest_index].reset_index(drop=True)
 validation_set = random_data[validationTest_index:].reset_index(drop=True)
 
@@ -57,10 +57,17 @@ training_set["message"] = training_set["message"].str.replace("[^a-zA-Z]", " ")
 training_set["message"] = training_set["message"].replace(r"\s+", " ", regex=True)
 training_set["message"] = training_set["message"].str.lower()
 
-# Map data with ham and spam
-training_set["spam"] = training_set["spam"].map({"ham": 1, "spam": 0})
+
+# Construction of model
+def bayesLaplaceSmoothingModel(training_set):
+    training_set["spam"] = training_set["spam"].map({"ham": 1, "spam": 0})
+    spam = training_set[training_set["spam"] == 1]
+    ham = training_set[training_set["spam"] == 0]
+
+    return spam, ham
 
 
+print(bayesLaplaceSmoothingModel(training_set))
 # Ham = 1
 # Spam = 0
 # Print data
