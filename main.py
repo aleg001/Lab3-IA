@@ -5,7 +5,9 @@ Fecha de inicio: 10/02/2023
 """
 
 # Imports
+from collections import defaultdict
 import csv
+import re
 import pandas as pd
 
 
@@ -58,17 +60,55 @@ training_set["message"] = training_set["message"].replace(r"\s+", " ", regex=Tru
 training_set["message"] = training_set["message"].str.lower()
 
 
+# dictionaryProbability function
+def dictionaryProbability(data, laplace, data2):
+    return {
+        palabra: (data[palabra] + laplace) / (data2 + laplace * len(data))
+        for palabra in data
+    }
+
+
 # Construction of model
 def bayesLaplaceSmoothingModel(training_set):
     training_set["spam"] = training_set["spam"].map({"ham": 1, "spam": 0})
-    spam = training_set[training_set["spam"] == 1]
-    ham = training_set[training_set["spam"] == 0]
 
-    return spam, ham
+    palabras_spam = 0
+    palabras_ham = 0
+    paramLaplaceSmoothing = 1
+    diccionarioSpam = defaultdict(int)
+    diccionarioHam = defaultdict(int)
+
+    for __, r in training_set.iterrows():
+        ham = r["spam"] == 1
+        spam = r["spam"] == 0
+        mensaje = r["message"]
+        palabras = re.findall(r"\b\w+\b", mensaje)
+
+        for x in palabras:
+            if spam:
+                palabras_spam += 1
+                diccionarioSpam[x] += 1
+            if ham:
+                palabras_ham += 1
+                diccionarioHam[x] += 1
+
+    # Probabilidades - Laplace Smoothing
+    probabilidadSpam = (
+        training_set["spam"].value_counts()[0] + paramLaplaceSmoothing
+    ) / (len(training_set) + paramLaplaceSmoothing * 2)
+
+    probabilidadHam = (
+        training_set["spam"].value_counts()[1] + paramLaplaceSmoothing
+    ) / (len(training_set) + paramLaplaceSmoothing * 2)
+
+    psw = dictionaryProbability(diccionarioSpam, paramLaplaceSmoothing, palabras_spam)
+    phw = dictionaryProbability(diccionarioHam, paramLaplaceSmoothing, palabras_ham)
+
+    return probabilidadHam, probabilidadSpam
 
 
-print(bayesLaplaceSmoothingModel(training_set))
 # Ham = 1
 # Spam = 0
 # Print data
+print(bayesLaplaceSmoothingModel(training_set))
 print(training_set["spam"].value_counts())
