@@ -1,6 +1,5 @@
 """
 Lab 3 - Inteligencia Artificial
-
 Fecha de inicio: 10/02/2023
 """
 
@@ -44,7 +43,6 @@ validationTest_index = round(len(test_set) * 0.1)
 validation_test = random_data[:validationTest_index].reset_index(drop=True)
 validation_set = random_data[validationTest_index:].reset_index(drop=True)
 
-
 # Saving data into different files
 
 with open("training_set.csv", "w") as training:
@@ -56,9 +54,11 @@ with open("validation_test.csv", "w") as validation:
 
 # Normalization of data
 training_set["message"] = training_set["message"].str.replace("[^a-zA-Z]", " ")
-training_set["message"] = training_set["message"].replace(r"\s+", " ", regex=True)
+training_set["message"] = training_set["message"].replace(r"\s+",
+                                                          " ",
+                                                          regex=True)
 training_set["message"] = training_set["message"].str.lower()
-
+temp_set = training_set
 
 # dictionaryProbability function
 def dictionaryProbability(data, laplace, data2):
@@ -68,6 +68,7 @@ def dictionaryProbability(data, laplace, data2):
     }
 
 
+  
 # Construction of model
 def bayesLaplaceSmoothingModel(training_set):
     training_set["spam"] = training_set["spam"].map({"ham": 1, "spam": 0})
@@ -91,19 +92,19 @@ def bayesLaplaceSmoothingModel(training_set):
             if ham:
                 palabras_ham += 1
                 diccionarioHam[x] += 1
-
     # Probabilidades - Laplace Smoothing
-    probabilidadSpam = (
-        training_set["spam"].value_counts()[0] + paramLaplaceSmoothing
-    ) / (len(training_set) + paramLaplaceSmoothing * 2)
+    probabilidadSpam = (training_set["spam"].value_counts()[0] +
+                        paramLaplaceSmoothing) / (len(training_set) +
+                                                  paramLaplaceSmoothing * 2)
 
-    probabilidadHam = (
-        training_set["spam"].value_counts()[1] + paramLaplaceSmoothing
-    ) / (len(training_set) + paramLaplaceSmoothing * 2)
+    probabilidadHam = (training_set["spam"].value_counts()[1] +
+                       paramLaplaceSmoothing) / (len(training_set) +
+                                                 paramLaplaceSmoothing * 2)
 
-    psw = dictionaryProbability(diccionarioSpam, paramLaplaceSmoothing, palabras_spam)
-    phw = dictionaryProbability(diccionarioHam, paramLaplaceSmoothing, palabras_ham)
-
+    psw = dictionaryProbability(diccionarioSpam, paramLaplaceSmoothing,
+                                palabras_spam)
+    phw = dictionaryProbability(diccionarioHam, paramLaplaceSmoothing,
+                                palabras_ham)
     """
     Pendiente:
     Recuerde dejar
@@ -111,12 +112,109 @@ def bayesLaplaceSmoothingModel(training_set):
     Presente al final del entrenamiento, la métrica de desempeño sobre el subset de training y sobre el subset de
     testing.
     """
-
-    return probabilidadHam, probabilidadSpam
+  
+    return probabilidadHam, probabilidadSpam, phw, psw
 
 
 # Ham = 1
 # Spam = 0
 # Print data
-print(bayesLaplaceSmoothingModel(training_set))
-print(training_set["spam"].value_counts())
+
+probham, probspam, phw, psw = bayesLaplaceSmoothingModel(training_set)
+
+test_set["message"] = test_set["message"].str.replace("[^a-zA-Z]", " ")
+test_set["message"] = test_set["message"].replace(r"\s+",
+                                                          " ",
+                                                          regex=True)
+test_set["message"] = test_set["message"].str.lower()
+
+
+def clasificar(mensaje):
+  
+    Pspammensaje = probspam
+    Phammensaje = probham
+
+    for palabra in mensaje.split():
+        if palabra in psw:
+            Pspammensaje += (Pspammensaje * psw[palabra])
+          
+        if palabra in phw:
+            Phammensaje += (Phammensaje * phw[palabra])
+
+    print('P(Spam|mensaje):', Pspammensaje)
+    print('P(Ham|mensaje):', Phammensaje)
+
+    if Phammensaje > Pspammensaje:
+        print('Este mensaje es muy probable que sea ham')
+    elif Phammensaje < Pspammensaje:
+        print('Este mensaje es muy probable que sea spam')
+    else:
+        print('Equal proabilities, have a human classify this!')
+
+def testear(mensaje):
+
+  
+    Pspammensaje = probspam
+    Phammensaje = probham
+
+    for palabra in mensaje.split():
+        if palabra in psw:
+            Pspammensaje += (Pspammensaje * psw[palabra])
+          
+        if palabra in phw:
+            Phammensaje += (Phammensaje * phw[palabra])
+    
+    if Phammensaje > Pspammensaje:
+       return 'ham'
+    elif Pspammensaje > Phammensaje:
+       return 'spam'
+    else:
+       return 'no se sabe'
+
+test_set['prediccion'] = test_set['message'].apply(testear)
+temp_set['prediccion'] = temp_set['message'].apply(testear)
+
+
+menu = None
+
+while menu != 5:
+  print("Bienvenido al programa de detección de spam o ham\Que quiere hacer?\n")
+  menu = int(input("1. Ver simulación de spam en el set de entreamiento\n2. Ver simulación de spam en el set de test.\n3. Escribir un mensaje para detectar si es spam o ham\n4. Ver simulación usando librerias\n"))
+  if menu == 1:
+    correctas = 0
+    total = temp_set.shape[0]
+    temp_set["spam"] = temp_set["spam"].map({1: "ham", 0: "spam"})
+    
+    for row in temp_set.iterrows():
+       
+       row = row[1]
+       if row['spam'] == row['prediccion']:
+          correctas += 1
+    print
+    print('Correctas:', correctas)
+    print('Incorrectes:', total - correctas)
+    print('Exactitud:', correctas/total)
+  elif menu == 2:
+    correctas = 0
+    total = test_set.shape[0]
+    
+    for row in test_set.iterrows():
+       row = row[1]
+       if row['spam'] == row['prediccion']:
+          correctas += 1
+    print
+    print('Correctas:', correctas)
+    print('Incorrectas:', total - correctas)
+    print('Exactitud:', correctas/total)
+  elif menu == 3:
+    texto = input("Ingrese un mensaje: \n")
+    clasificar(texto)
+  elif menu == 4:
+    #Espacio de las librerías
+    print(":)")
+  elif menu == 5:
+    print("Gracias por su uso :3")
+  else:
+    print("Ingrese un valor válido")
+  
+   
