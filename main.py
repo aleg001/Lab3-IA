@@ -7,7 +7,13 @@ Fecha de inicio: 10/02/2023
 from collections import defaultdict
 import csv
 import re
-import pandas as pd
+import numpy as np
+import pandas as pd 
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix, precision_score, recall_score, accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB, BernoulliNB, GaussianNB
+from sklearn.utils.multiclass import unique_labels
 
 
 def TxtReaderWriter(txt_file, csv_file):
@@ -130,7 +136,9 @@ test_set["message"] = test_set["message"].str.lower()
 
 
 def clasificar(mensaje):
-  
+    
+    #Métrica  utilizar es que basada en cada oración, se le suma la probabilidad de la palbra por la probabilidad de la bayesiana, y todo se hace una sumatoria para determinar si es mayor o menor la probabilidad de spam o ham
+    #Si spam, devuleve que es spam, si es ham, devuelva es ham. El caso que sean iguales, devuelve que no se sabe.
     Pspammensaje = probspam
     Phammensaje = probham
 
@@ -153,7 +161,8 @@ def clasificar(mensaje):
 
 def testear(mensaje):
 
-  
+    #Métrica  utilizar es que basada en cada oración, se le suma la probabilidad de la palbra por la probabilidad de la bayesiana, y todo se hace una sumatoria para determinar si es mayor o menor la probabilidad de spam o ham
+    #Si spam, devuleve que es spam, si es ham, devuelva es ham. El caso que sean iguales, devuelve que no se sabe.
     Pspammensaje = probspam
     Phammensaje = probham
 
@@ -211,7 +220,22 @@ while menu != 5:
     clasificar(texto)
   elif menu == 4:
     #Espacio de las librerías
-    print(":)")
+    data = pd.read_csv('entrenamiento.csv')
+    data['spam'] = np.where(data['spam']=='spam',1, 0)
+    X_train, X_test, y_train, y_test = train_test_split(data['message'], 
+                                                        data['spam'], 
+                                                        test_size=0.2,
+                                                        random_state=1234)
+    vectorizer = CountVectorizer(ngram_range=(1, 2)).fit(X_train)
+    X_train_vectorized = vectorizer.transform(X_train)
+    X_train_vectorized.toarray().shape
+    model = MultinomialNB(alpha=0.1)
+    model.fit(X_train_vectorized, y_train)
+    predictions = model.predict(vectorizer.transform(X_test))
+    print(accuracy_score(y_test,predictions))
+    print(confusion_matrix(y_test,predictions))
+    #La razón que esto se ve mucho mejor a difernecia de nuestro modelo, es que aquí esta utilizando ya librerías implementados de de Naive Bayes, con Multinomial
+    #A parte de esto, ya se tiene un valor alpha mucho más bajo que el nuestro que lleva unos mejores resultados, y no tiene problemas con ciertos tipos de caracteres, que los tiene que remover u otra cosa.
   elif menu == 5:
     print("Gracias por su uso :3")
   else:
