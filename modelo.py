@@ -16,6 +16,8 @@ training_test_index = round(len(df) * 0.8)
 training_set = random_data[:training_test_index].reset_index(drop=True)
 test_set = random_data[training_test_index:].reset_index(drop=True)
 
+
+
 # Validation Test
 validationTest_index = round(len(test_set) * 0.1)
 validation_test = random_data[:validationTest_index].reset_index(drop=True)
@@ -28,7 +30,7 @@ with open("test_set.csv", "w",encoding='utf-8') as test:
     test.write(test_set.to_csv(index=False))
 with open("validation_test.csv", "w",encoding='utf-8') as validation:
     validation.write(validation_test.to_csv(index=False))
-
+   
 # dictionaryProbability function
 def dictionaryProbability(data, laplace, data2):
     return {
@@ -59,6 +61,7 @@ def bayesLaplaceSmoothingModel(training_set):
             if ham:
                 palabras_ham += 1
                 diccionarioHam[x] += 1
+
     # Probabilidades - Laplace Smoothing
     probabilidadSpam = (training_set["spam"].value_counts()[0] +
                         paramLaplaceSmoothing) / (len(training_set) +
@@ -72,18 +75,24 @@ def bayesLaplaceSmoothingModel(training_set):
                                 palabras_spam)
     phw = dictionaryProbability(diccionarioHam, paramLaplaceSmoothing,
                                 palabras_ham)
-    """
-    Presente al final del entrenamiento, la métrica de desempeño sobre el subset de training y sobre el subset de
-    testing.
-    """
-  
+
     return probabilidadHam, probabilidadSpam, phw, psw
+
+# Function to calculate the acurracy of the model 
+def accuracy (training, test):
+    predccion  =training['spam']
+    true_labels = test['spam'].to_list()
+    num_muestras = len(test)
+    num_correctas = 0
+    for i in range(num_muestras):
+        if predccion[i] == true_labels[i]:
+            num_correctas += 1
+    accuracy = num_correctas / num_muestras
+    print("Accuracy: ",accuracy)
 
 # Normalization of data
 training_set["message"] = training_set["message"].str.replace("[^a-zA-Z]", " ")
-training_set["message"] = training_set["message"].replace(r"\s+",
-                                                          " ",
-                                                          regex=True)
+training_set["message"] = training_set["message"].replace(r"\s+", " ",regex=True)
 training_set["message"] = training_set["message"].str.lower()
 temp_set = training_set
 
